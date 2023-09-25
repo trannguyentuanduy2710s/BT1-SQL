@@ -1,0 +1,158 @@
+CREATE DATABASE db_exam1;
+
+USE db_exam1;
+
+
+
+CREATE TABLE users(
+	users_id INT PRIMARY KEY AUTO_INCREMENT,
+	full_name VARCHAR(30),
+	email VARCHAR(30),
+	password VARCHAR(50)
+);
+
+INSERT INTO users (full_name, email, password)
+VALUES ('Nguyen Van A', 'nguyenvana@example.com', 'password1'),
+       ('Tran Thi B', 'tranthib@example.com', 'password2'),
+       ('Le Van C', 'levanc@example.com', 'password3'),
+
+INSERT INTO users (full_name, email, password)
+VALUES ('Nguyen Van F', 'nguyenvanf@example.com', 'password6');
+      
+
+CREATE TABLE restaurant(
+	res_id INT PRIMARY KEY AUTO_INCREMENT,
+	res_name VARCHAR(30),
+	image VARCHAR(50),
+	descript VARCHAR(50)
+);
+ALTER TABLE restaurant MODIFY COLUMN descript VARCHAR(150)
+
+INSERT INTO restaurant (res_name, image, descript)
+VALUES ('Nhà hàng A', 'nhahanga.jpg', 'Nhà hàng A phục vụ các món ăn Việt Nam truyền thống'),
+       ('Nhà hàng B', 'nhahangb.jpg', 'Nhà hàng B chuyên về các món ăn Âu'),
+       ('Nhà hàng C', 'nhahangc.jpg', 'Nhà hàng C nổi tiếng với các món ăn Nhật Bản');
+
+CREATE TABLE food(
+	food_id INT PRIMARY KEY AUTO_INCREMENT,
+	food_name VARCHAR(30),
+	image VARCHAR(50),
+	price NUMBER(15),
+	descript VARCHAR(50),
+	type_id INT,
+	FOREIGN KEY (type_id) REFERENCES food_type (type_id) 
+);
+
+
+INSERT INTO food (food_name, image, price, descript, type_id)
+VALUES ('Tên món 1', 'Đường dẫn hình ảnh 1',  10000, 'Mô tả 1', 1),
+       ('Tên món 2', 'Đường dẫn hình ảnh 2',  20000, 'Mô tả 2', 2),
+       ('Tên món 3', 'Đường dẫn hình ảnh 3',  30000, 'Mô tả 3', 3);
+
+CREATE TABLE food_type(
+	type_id INT PRIMARY KEY AUTO_INCREMENT,
+	type_name VARCHAR(30)
+);
+
+INSERT INTO food_type (type_name)
+VALUES ('Món Việt'),
+       ('Món Âu'),
+       ('Món Nhật');
+
+CREATE TABLE sub_food(
+	sub_id INT PRIMARY KEY AUTO_INCREMENT,
+	sub_name VARCHAR(30),
+	sub_price FLOAT(15),
+	food_id INT,
+	FOREIGN KEY (food_id) REFERENCES food (food_id)
+);
+
+
+INSERT INTO sub_food (sub_name, sub_price, food_id)
+VALUES ('Món phụ A', 50000, 1),
+       ('Món phụ B', 60000, 2),
+       ('Món phụ C', 70000, 3);
+
+CREATE TABLE orders(
+	users_id INT,
+	FOREIGN KEY (users_id) REFERENCES users (users_id),
+	food_id INT,
+	FOREIGN KEY (food_id) REFERENCES food (food_id),
+	amount INT,
+	code VARCHAR(30),
+	arr_sub_id VARCHAR(50)
+);
+
+
+INSERT INTO orders (users_id, food_id, amount, code, arr_sub_id)
+VALUES  (4, 2, 5, 'CODE234', '1,3');
+
+CREATE TABLE rate_res(
+	users_id INT,
+	FOREIGN KEY (users_id) REFERENCES users (users_id),
+	res_id INT,
+	FOREIGN KEY (res_id) REFERENCES restaurant (res_id),
+	amount INT,
+	date_rate DATETIME
+);
+
+
+INSERT INTO rate_res (users_id, res_id, amount, date_rate)
+VALUES (1, 1, 5, '2023-09-21 04:16:42'),
+       (2, 2, 4, '2023-09-22 12:30:00'),
+       (3, 3, 5, '2023-09-23 18:45:30');
+
+CREATE TABLE like_res(
+	users_id INT,
+	FOREIGN KEY (users_id) REFERENCES users (users_id),
+	res_id INT,
+	FOREIGN KEY (res_id) REFERENCES restaurant (res_id),
+	date_like DATETIME
+);
+
+
+INSERT INTO like_res (users_id, res_id, date_like)
+VALUES (1, 1, '2023-09-21 04:16:42'),
+       (2, 2, '2023-09-22 12:30:00'),
+       (3, 3, '2023-09-23 18:45:30');
+       
+INSERT INTO like_res (users_id, res_id, date_like)
+VALUES (1, 2, '2023-09-21 04:16:42'),
+       (5, 2, '2023-09-22 12:30:00'),
+       (4, 3, '2023-09-23 18:45:30');
+       
+1): Tìm 5 người đã like nhiều nhà hàng nhất : 
+SELECT COUNT(like_res.users_id) as count_like_user, users.full_name, users.email, like_res.users_id
+FROM like_res
+INNER JOIN users on users.users_id = like_res.users_id
+GROUP BY users.full_name, users.email, like_res.users_id
+ORDER BY COUNT(like_res.users_id) DESC LIMIT 5;
+
+2): Tìm 2 nhà hàng có lượt like nhiều nhất :
+
+SELECT COUNT(like_res.res_id) as count_like_res, restaurant.res_name, restaurant.image, like_res.res_id
+FROM like_res
+INNER JOIN restaurant on restaurant.res_id = like_res.res_id
+GROUP BY restaurant.res_name, restaurant.image, like_res.res_id
+ORDER BY COUNT(like_res.res_id) DESC LIMIT 2;
+
+3): Tìm người đặt hàng nhiều nhất :
+
+SELECT orders.amount as users_maximum_order, users.full_name, users.email, orders.users_id, orders.amount
+FROM orders
+INNER JOIN users on users.users_id = orders.users_id
+GROUP BY users.full_name, users.email, orders.users_id, orders.amount
+ORDER BY (orders.amount) DESC LIMIT 1;
+
+4): Tìm người dùng không hoạt động trong hệ thống : 
+
+
+ALTER TABLE users ADD COLUMN trang_thai INT;
+
+
+UPDATE users
+SET trang_thai = 0
+WHERE users.users_id = 6;
+
+--Kiếm người không hoạt động theo trang_thai = 0
+SELECT * FROM users WHERE trang_thai = 0;
